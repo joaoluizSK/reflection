@@ -1,7 +1,11 @@
 package example.generator;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import example.annotations.Ignorar;
+import example.annotations.NomePropriedade;
 
 public class MapGenerator {
 
@@ -12,7 +16,14 @@ public class MapGenerator {
 		for (Method m : classe.getMethods()) {
 			try {
 				if (isGetter(m)) {
-					String propriedade = deGetterParaPropriedade(m.getName());
+					String propriedade = null;
+					
+					if(m.isAnnotationPresent(NomePropriedade.class)){
+						propriedade = m.getAnnotation(NomePropriedade.class).value();
+					}else{
+						propriedade = deGetterParaPropriedade(m.getName());
+					}
+							
 					Object valor = m.invoke(o);
 					mapa.put(propriedade, valor);
 				}
@@ -25,7 +36,7 @@ public class MapGenerator {
 	}
 
 	private static boolean isGetter(Method m) {
-		return m.getName().startsWith("get") && m.getReturnType() != void.class && m.getParameterTypes().length == 0;
+		return m.getName().startsWith("get") && m.getReturnType() != void.class && m.getParameterTypes().length == 0 && !m.isAnnotationPresent(Ignorar.class);
 	}
 
 	private static String deGetterParaPropriedade(String nomeGetter) {
